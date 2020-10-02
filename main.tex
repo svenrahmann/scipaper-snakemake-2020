@@ -282,7 +282,8 @@ Instead of defining Conda environments, it is also possible to define a containe
 Upon execution, Snakemake will pull the requested container image and run a job inside that container using Singularity \parencite{kurtzer_singularity_2017}.
 The advantage of using containers is that the execution environment can be controlled down to the system libraries, and becomes portable across operating systems, thereby further increasing reproducibility \parencite{gruning_practical_2018}.
 Containers already exist in centralized repositories for a wide range of scientific software applications, allowing easy integration info Snakemake workflows. 
-The downside of using containers is that generating and modifying container images requires additional effort, as well as storage, since the image has to be uploaded to a container registry.
+The downside of using containers is that generating and modifying container images requires additional effort, as well as storage, since the image has to be uploaded to a container registry. 
+The storage needed for containers can be minimized during workflow execution by reusing a common container image across multiple workflow steps, or by using step-specific containers comprised of small layers with step-specific customizations on top of a common shared base layer. 
 A sweet spot between containers and Conda can be exploited by combining \lstinline!container! and \lstinline!conda! directives.
 In that case, Snakemake will generate the requested Conda environment inside of the container, providing the flexibility of Conda together with the additional reproducibility guarantees of containers.
 
