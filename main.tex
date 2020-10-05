@@ -89,6 +89,8 @@
 	Here, we analyze the properties needed for a data analysis to become reproducible, adaptable, and transparent, and show how the popular workflow management system Snakemake can be used to guarantee this.
 \end{abstract}
 
+\section{Introduction}\label{sec:introduction}
+
 Despite the ubiquity of data analysis across scientific disciplines, it is a challenge to ensure \emph{in silico} reproducibility~\parencite{Mesirov2010,Baker2016,Munaf__2017}.
 By automating the analysis process, workflow management systems can help to achieve such reproducibility.
 Consequently, a ``Cambrian explosion'' of diverse scientific workflow management systems is in process; some are already in use by many and evolving, and countless others are emerging and being published (see~\url{https://github.com/pditommaso/awesome-pipeline}).
@@ -111,8 +113,11 @@ The caveat of these benefits is that by disallowing imperative or functional pro
 
 Fifth, there are system-independent workflow specification languages like CWL~\parencite{cwl} and WDL~\parencite{voss_full-stack_2017}.
 These define a declarative syntax for specifying workflows, which can be parsed and executed by arbitrary executors, e.g. Cromwell (\url{https://cromwell.readthedocs.io}), Toil~\parencite{Vivian_2017}, and Tibanna~\parencite{Lee_2019}.
-Here, a main advantage is that the same workflow definition can be executed on various specialized execution backends, thereby promising scalability to virtually any computing platform.
 Similar to the fourth niche, a downside is that imperative or functional programming is not or less integrated into the specification language, thereby limiting the expressive power.
+In contrast, a main advantage is that the same workflow definition can be executed on various specialized execution backends, thereby promising scalability to virtually any computing platform.
+Another important use case for system-independent languages is that they promote interoperability between other workflow definition languages.
+For example, Snakemake workflows can (within limits) be automatically exported to CWL, and Snakemake can make use of CWL tool definitions.
+An automatic translation of any CWL workflow definition into a Snakemake workflow is planned as well.
 
 Today, several of the above mentioned approaches support full in silico reproducibility of data analyses (e.g. Galaxy, Nextflow, Snakemake, WDL, CWL), by allowing the definition and scalable execution of each involved step, including deployment of the software stack needed for each step (e.g. via the Conda package manager,~\url{https://docs.conda.io}, Docker,~\url{https://www.docker.com}, or Singularity~\parencite{kurtzer_singularity_2017} containers).
 
