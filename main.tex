@@ -52,6 +52,7 @@
 \author[9]{Alexander Kanitz}
 \author[14]{Andreas Wilm}
 \author[10,8]{Manuel Holtgrewe}
+\author[17]{Sven Rahmann}
 \author[12]{Sven Nahnsen}
 \author[1,7,\corresponding]{Johannes Köster}
 
@@ -69,7 +70,8 @@
 \affil[12]{Quantitative Biology Center (QBiC), University of Tübingen, Tübingen, Germany}
 \affil[14]{Microsoft Singapore, Singapore}
 \affil[15]{Swiss Institute of Bioinformatics (SIB), Basel, Switzerland}
-\affil[16]{Department of Organismic and Evolutionary Biology, Harvard University, Cambridge, MA, 02138, USA}
+\affil[16]{Department of Organismic and Evolutionary Biology, Harvard University, Cambridge, MA, USA}
+\affil[17]{Genome Informatics, Institute of Human Genetics, University Hospital Essen, University of Duisburg-Essen, Essen, Germany}
 \correspondingtext{To whom correspondence should be addressed}
 
 \title{Sustainable data analysis with Snakemake}
@@ -79,12 +81,12 @@
 	Data analysis often entails a multitude of heterogeneous steps, from the application of various command line tools to the usage of scripting languages like R or Python for the generation of plots and tables.
 	It is widely recognized that data analyses should ideally be conducted in a reproducible way.
 	Reproducibility enables technical validation and regeneration of results on the original or even new data.
-	However, reproducibility alone is by no means sufficient to deliver an analysis that is of lasting impact (i.e. sustainable) for the field, or even just one research group.
+	However, reproducibility alone is by no means sufficient to deliver an analysis that is of lasting impact (i.e., sustainable) for the field, or even just one research group.
 	We postulate that it is equally important to ensure adaptability and transparency.
 	The former describes the ability to modify the analysis to answer extended or slightly different research questions.
 	The latter describes the ability to understand the analysis in order to judge whether it is not only technically, but methodologically valid.
 
-	Here, we analyze the properties needed for a data analysis to become reproducible, adaptable, and transparent, and show how the popular workflow management system Snakemake can be used to fulfill all these needs.
+	Here, we analyze the properties needed for a data analysis to become reproducible, adaptable, and transparent, and show how the popular workflow management system Snakemake can be used to guarantee this.
 \end{abstract}
 
 Despite the ubiquity of data analysis across scientific disciplines, it is a challenge to ensure \emph{in silico} reproducibility~\parencite{Mesirov2010,Baker2016,Munaf__2017}.
@@ -181,6 +183,8 @@ In shell commands, input and output files, as well additional parameters, are di
 	\includegraphics[width=12cm]{example-workflow.pdf}
 	\caption{
 		Example Snakemake workflow. (a) workflow definition; hypothesized knowledge requirement for line readability is color-coded on the left next to the line numbers. (b) directed acyclic graph (DAG) of jobs, representing the automatically derived execution plan from the example workflow; job node colors reflect rule colors in the workflow definition. (c) content of script plot-hist.py referred from rule plot\_histogram. (d) knowledge requirements for readability by statement category (see supplementary \autoref{s-sec:readability}).
+		The example workflow downloads data, plots histograms of city populations within a given list of countries, and converts these from SVG to PDF format.
+		Note that this is solely meant as a short yet comprehensive demonstration of the Snakemake syntax.
 	}
 	\label{fig:example}
 \end{figure}
@@ -295,7 +299,7 @@ Output files in the workflow can be annotated for automatic inclusion in the rep
 These features enable the interactive exploration of results alongside information about their provenance.
 Since results are included into the report, their presentation does not depend on availability of server backends, making Snakemake reports easily portable and archivable.
 In the future, Snakemake reports will be extended to additionally follow the RO-crate standard, which will make them machine-readable and allow an integration with web services like \url{https://workflowhub.eu}.
-An example report is included as supplementary file 1.
+An example report summarizing the (minimal) data analysis conducted for this article is included as supplementary file ``report.html''.
 
 \subsection{Scalability}\label{sec:scalability}
 
@@ -468,11 +472,13 @@ For any output file in a workflow, if the corresponding rule is marked as eligib
 The hash value is calculated in the following way.
 Let $J$ be the set of jobs of a workflow.
 For any job $j \in J$, let $c_j$ denote its code (shell command, script, wrapper, or notebook), let $P_j = \{(k_i, v_i) \mid i=0,\dots,m\}$ be its set of parameters (with key $k_i$ and JSON-encoded value $v_i$), let $F_j$ be its set of input files that are not created by any other job, and let $s_j$ be a string describing the associated software environment (either a container unique resource identifier, a Conda environment definition, or both).
-Then, assuming that job $j \in J$ with dependencies $D_j \subset J$ is the job of interest, we can calculate the hash value as $$ h(j) = h'\left( c_j \oplus \left(\bigoplus_{i=0}^m k_i \oplus v_i \right) \oplus \left( \bigoplus_{f \in F_j} h'(f) \right) \oplus s_j \oplus \left( \bigoplus_{j' \in D_j} h(j') \right) \right) $$ with $h'$ being the SHA-256 \parencite{Handschuh} hash function, $\oplus$ being the string concatenation, and $\bigoplus$ being the string concatenation of its operands in lexicographic order.
+Then, assuming that job $j \in J$ with dependencies $D_j \subset J$ is the job of interest, we can calculate the hash value as $$ h(j) = h'\left( c_j \odot \left(\bigodot_{i=0}^m k_i \odot v_i \right) \odot \left( \bigodot_{f \in F_j} h'(f) \right) \odot s_j \odot \left( \bigodot_{j' \in D_j} h(j') \right) \right) $$ with $h'$ being the SHA-256 \parencite{Handschuh} hash function, $\odot$ being the string concatenation, and $\bigodot$ being the string concatenation of its operands in lexicographic order.
 
 The hash function $h(j)$ comprehensively describes everything that affects the content of the output files of job~\(j\), namely code, parameters, raw input files, the software environment and the input generated by jobs it depends on.
 For the latter, we recursively apply the hash function~\(h\) again.
 In other words, for each dependency~\(j' \in D_j\) we include a hash value into the hash of job~\(j\), which is in fact the hashing principle behind blockchains used for cryptocurrency \parencite{narayanan_bitcoin_2016}.
+The hash is only descriptive if the workflow developer ensures that the cached result is generated in a deterministic way.
+For example, downloading from a URL that yields data which may change over time should be avoided.
 
 \subsubsection{Graph partitioning}\label{sec:partitioning}
 
@@ -516,7 +522,7 @@ The latter can only be secured by having a transparent yet accessible view on th
 By analyzing its readability and presenting its modularization, portability, reporting, scheduling, caching, partitioning, and streaming abilities, we have shown how Snakemake supports all these aspects, and thereby provides a comprehensive framework for sustainable data analysis.
 
 \section{Author contributions}
-Felix Mölder has designed and implemented the job scheduling mechanism (\autoref{sec:scheduling}) and edited the manuscript.
+Felix Mölder has designed and implemented the job scheduling mechanism (\autoref{sec:scheduling}; supervised by Johannes Köster and Sven Rahmann) and edited the manuscript.
 Kim Philip Jablonski has designed and implemented Jupyter notebook integration (\autoref{sec:modularization}) and edited the manuscript.
 Michael Hall and Brice Letcher have designed and implemented automated code formatting (\autoref{sec:style}) and Brice Letcher has edited the manuscript.
 Vanessa Sochat has designed and implemented the Google Cloud Life Sciences API execution backend, as well as various improvements to Google storage support (\autoref{sec:scalability}) and edited the manuscript.
@@ -526,6 +532,7 @@ Andreas Wilm has designed and implemented the Microsoft Azure execution backend 
 Manuel Holtgrewe has designed and implemented benchmarking support (supplementary \autoref{s-sec:design-patterns}).
 Jan Forster has designed and implemented meta-wrapper support (\autoref{sec:modularization}).
 Christopher Tomkins-Tinch has designed and implemented remote storage support (\autoref{sec:automation}) and edited the manuscript.
+Sven Rahmann has edited the manuscript.
 Sven Nahnsen has provided the initial idea of using blockchain hashing to fingerprint output files a priori (\autoref{sec:caching}).
 Johannes Köster has written the manuscript and implemented all other features that occur in the text but are not explicitly mentioned in above listing.
 All authors have read and approved the manuscript.
@@ -533,7 +540,7 @@ All authors have read and approved the manuscript.
 \section{Acknowledgements}
 We are most grateful for the thousands of Snakemake users, their enhancement proposals, bug reports, and efforts to perform sustainable data analyses.
 We deeply thank all contributors to the Snakemake, Snakemake-Profile, Snakemake-Workflows, and Snakemake-Wrappers codebases.
-This work was supported by the Netherlands Organisation for Scientific Research (NWO) (VENI grant 016.Veni.173.076, Johannes Köster), the German Research Foundation (SFB 876, Johannes Köster), the United States National Science Foundation Graduate Research Fellowship Program (NSF-GRFP) (Grant No. 1745303, Christopher Tomkins-Tinch), and Google LLC (Vanessa Sochat and Johannes Köster).
+This work was supported by the Netherlands Organisation for Scientific Research (NWO) (VENI grant 016.Veni.173.076, Johannes Köster), the German Research Foundation (SFB 876, Johannes Köster and Sven Rahmann), the United States National Science Foundation Graduate Research Fellowship Program (NSF-GRFP) (Grant No. 1745303, Christopher Tomkins-Tinch), and Google LLC (Vanessa Sochat and Johannes Köster).
 
 \printbibliography
 
